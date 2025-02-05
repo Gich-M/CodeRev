@@ -13,6 +13,7 @@ import { NewSnippet } from './pages/NewSnippet';
 import { Feed } from './pages/Feed';
 import { PendingReviews } from './pages/PendingReviews';
 import { useAuth } from './hooks/useAuth';
+import Footer from './components/Footer';
 
 // Protected Route wrapper component
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -37,9 +38,9 @@ export default function App() {
         v7_relativeSplatPath: true
       }}
     >
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen flex flex-col">
         <Header />
-        <main className="py-8">
+        <main className="flex-grow py-8">
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<Home />} />
@@ -89,6 +90,7 @@ export default function App() {
             } />
           </Routes>
         </main>
+        <Footer />
       </div>
     </Router>
   );
