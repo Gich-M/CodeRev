@@ -25,7 +25,7 @@ export interface UserProfile {
   linkedin_url: string | null;
   website_url: string | null;
   preferred_languages: string[];
-  expertise_level: 'beginner' | 'intermediate' | 'advanced' | 'expert';
+  expertise_level?: ExpertiseLevel;
   reputation_points: number;
   total_reviews_given: number;
   total_submissions: number;
@@ -36,4 +36,6 @@ export interface UserProfile {
   canEditEmail?: boolean;
   provider?: string;
   user_achievements?: UserAchievement[];
-} 
+}
+
+export type ExpertiseLevel = 'beginner' | 'intermediate' | 'advanced';
