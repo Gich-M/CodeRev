@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Code2, MessageSquare, LinkIcon, Trash2 } from 'lucide-react';
-import { StatusBadge } from './StatusBadge';
+import { StatusBadge } from './shared/StatusBadge';
+import { supabase } from '../lib/supabase';
 import type { FeedItem as FeedItemType } from '../types/feed';
 
 interface FeedItemProps {
@@ -12,6 +13,45 @@ interface FeedItemProps {
 }
 
 export function FeedItem({ item, onDelete, currentUserId }: FeedItemProps) {
+  const [commentCount, setCommentCount] = useState(0);
+
+  const fetchCommentCount = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('snippet_comment_counts')
+        .select('comment_count')
+        .eq('code_snippet_id', item.code_snippet?.id)
+        .maybeSingle();
+      
+      if (error) throw error;
+      setCommentCount(data?.comment_count || 0);
+    } catch (error) {
+      console.error('Error fetching comment count:', error);
+      setCommentCount(0);
+    }
+  };
+
+  useEffect(() => {
+    fetchCommentCount();
+
+    const channel = supabase
+      .channel(`comments-${item.code_snippet?.id}`)
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'comments',
+          filter: `code_snippet_id=eq.${item.code_snippet?.id}`
+        },
+        fetchCommentCount
+      )
+      .subscribe();
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, [item.code_snippet?.id]);
+
   // Early return if no code snippet and no title
   if (!item.code_snippet && !item.title) {
     return null;
@@ -105,16 +145,16 @@ export function FeedItem({ item, onDelete, currentUserId }: FeedItemProps) {
           >
             <div className="relative">
               <MessageSquare className="w-4 h-4 mr-1.5" />
-              {item.code_snippet.comment_count > 0 && (
+              {commentCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                  {item.code_snippet.comment_count}
+                  {commentCount}
                 </span>
               )}
             </div>
-            Comments {item.code_snippet.comment_count > 0 && `(${item.code_snippet.comment_count})`}
+            Comments
           </Link>
         </div>
       )}
     </motion.div>
   );
-} 
+}
