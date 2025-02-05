@@ -19,12 +19,14 @@ export interface User {
 
 export interface FeedItem {
   id: string;
-  title: string;
-  description: string;
-  created_at: string;
   user_id: string;
-  user: User;
+  type: string;
+  created_at: string;
   code_snippet?: CodeSnippet;
+  profiles?: {
+    username: string;
+    display_name?: string;
+  };
 }
 
 export interface FeedProps {
