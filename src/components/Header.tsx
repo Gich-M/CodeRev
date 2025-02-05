@@ -20,20 +20,58 @@ import {
 import { useAuth } from '../hooks/useAuth';
 import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
-import { format } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 
 type Notification = {
   id: string;
   type: string;
-  title: string;
-  message: string;
-  read: boolean;
+  user_id: string;
+  snippet_id: string;
+  review_id: string;
+  content: string;
+  is_read: boolean;
+  created_at: string;
+  reviewer: {
+    username: string;
+    avatar_url: string;
+  };
+  snippet: {
+    title: string;
+  };
+};
+
+interface NotificationProps {
+  id: string;
+  content: string;
   created_at: string;
   metadata: {
     status: string;
-    reviewer_username: string;
-    snippet_title: string;
+    timestamp: number;
+    reviewer: {
+      name: string;
+      id: string;
+    };
+    snippet: {
+      title: string;
+      id: string;
+    };
+    feedback?: string;
   };
+}
+
+export const NotificationItem = ({ notification }: { notification: NotificationProps }) => {
+  const timeAgo = formatDistanceToNow(new Date(notification.created_at), { addSuffix: true });
+  
+  return (
+    <div className="p-4 border-b border-gray-700">
+      <div className="flex justify-between items-start">
+        <div className="flex-1">
+          <p className="text-sm text-gray-300">{notification.content}</p>
+          <p className="text-xs text-gray-500 mt-1">{timeAgo}</p>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export function Header() {
@@ -132,14 +170,24 @@ export function Header() {
     const fetchNotifications = async () => {
       const { data, error } = await supabase
         .from('notifications')
-        .select('*')
+        .select(`
+          *,
+          review:reviews(
+            reviewer:profiles(username, avatar_url)
+          ),
+          snippet:code_snippets(title)
+        `)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(10);
 
       if (!error && data) {
-        setNotifications(data);
-        setUnreadCount(data.filter(n => !n.read).length);
+        setNotifications(data.map(n => ({
+          ...n,
+          reviewer: n.review?.reviewer,
+          snippet: n.snippet
+        })));
+        setUnreadCount(data.filter(n => !n.is_read).length);
       }
     };
 
@@ -171,19 +219,19 @@ export function Header() {
     try {
       const { error } = await supabase
         .from('notifications')
-        .update({ read: true })
+        .update({ is_read: true })
         .eq('user_id', user.id)
-        .eq(notificationId ? 'id' : 'read', notificationId || false);
+        .eq(notificationId ? 'id' : 'is_read', notificationId || false);
 
       if (error) throw error;
 
       if (notificationId) {
         setNotifications(prev => 
-          prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
+          prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
         );
         setUnreadCount(prev => Math.max(0, prev - 1));
       } else {
-        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+        setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
         setUnreadCount(0);
       }
     } catch (error) {
@@ -470,25 +518,28 @@ export function Header() {
                           No notifications
                         </div>
                       ) : (
-                        notifications.map(notification => (
-                          <div
-                            key={notification.id}
-                            onClick={() => markAsRead(notification.id)}
-                            className={`px-4 py-2 hover:bg-gray-800 cursor-pointer ${
-                              !notification.read ? 'bg-gray-800/50' : ''
-                            }`}
-                          >
-                            <div className="text-sm font-medium text-white">
-                              {notification.title}
+                        <div className="relative">
+                          {notifications.map(notification => (
+                            <div
+                              key={notification.id}
+                              className={`p-4 hover:bg-gray-800 cursor-pointer ${
+                                !notification.is_read ? 'bg-gray-800/50' : ''
+                              }`}
+                              onClick={() => markAsRead(notification.id)}
+                            >
+                              <div className="flex items-start gap-3">
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm text-gray-400 whitespace-pre-line">
+                                    {notification.content}
+                                  </p>
+                                  <p className="text-xs text-gray-500 mt-1">
+                                    {new Date(notification.created_at).toLocaleString()}
+                                  </p>
+                                </div>
+                              </div>
                             </div>
-                            <div className="text-xs text-gray-400">
-                              {notification.message}
-                            </div>
-                            <div className="text-xs text-gray-500 mt-1">
-                              {format(new Date(notification.created_at), 'MMM d, yyyy h:mm a')}
-                            </div>
-                          </div>
-                        ))
+                          ))}
+                        </div>
                       )}
                     </div>
                   )}
