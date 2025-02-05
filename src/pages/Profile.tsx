@@ -11,18 +11,9 @@ import type { UserProfile } from '../types/profile';
 
 const EXPERTISE_LEVELS = ['beginner', 'intermediate', 'advanced', 'expert'];
 const PROGRAMMING_LANGUAGES = [
-  'JavaScript', 'TypeScript', 'Python', 'Java', 'C++', 
-  'Ruby', 'Go', 'Rust', 'PHP', 'C#', 'Swift'
+  'C', 'C#', 'C++', 'Go', 'Java', 'JavaScript', 
+  'PHP', 'Python', 'Ruby', 'Rust', 'Swift', 'TypeScript'
 ];
-
-interface Achievement {
-  id: string;
-  name: string;
-  description: string;
-  icon_name: string;
-  points_value: number;
-  earned_at?: string;
-}
 
 export function Profile() {
   const { id } = useParams();
@@ -53,41 +44,27 @@ export function Profile() {
 
       if (profileError) throw profileError;
 
-      // Get achievements with correct join
+      // Get achievements data...
       const { data: achievementsData, error: achievementsError } = await supabase
         .from('user_achievements')
-        .select(`
-          user_id,
-          achievement_id,
-          earned_at,
-          achievement:achievements (
-            id,
-            name,
-            description,
-            icon_name,
-            points_value
-          )
-        `)
-        .eq('user_id', id);
+        .select(`...`);
 
-      if (achievementsError) {
-        console.error('Error fetching achievements:', achievementsError);
+      // Only get auth data if viewing own profile
+      let authUser = null;
+      if (id === user?.id) {
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+        authUser = currentUser;
       }
 
-      // Get auth data for email
-      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
-      
       // Combine all data
       const enrichedProfile = {
         ...profileData,
-        email: authUser?.email || '',
-        canEditEmail: !authUser?.app_metadata?.provider,
+        email: profileData.email || '', // Use email from profile data
+        canEditEmail: id === user?.id && !authUser?.app_metadata?.provider,
         provider: authUser?.app_metadata?.provider,
         user_achievements: achievementsData || []
       };
 
-      console.log('Enriched profile:', enrichedProfile);
-      
       setProfile(enrichedProfile);
       setFormData(enrichedProfile);
     } catch (error) {
