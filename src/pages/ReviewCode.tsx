@@ -27,6 +27,25 @@ export function ReviewCode() {
     if (user) {
       fetchSnippetsForReview();
     }
+
+    // Add real-time subscription
+    const subscription = supabase
+      .channel('snippets')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'code_snippets'
+        }, 
+        () => {
+          fetchSnippetsForReview();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [user, language]);
 
   const fetchSnippetsForReview = async () => {
@@ -35,10 +54,16 @@ export function ReviewCode() {
         .from('code_snippets')
         .select(`
           *,
-          user:profiles(username)
+          user:profiles(username),
+          reviews (
+            id,
+            status,
+            reviewer_id
+          )
         `)
         .eq('status', 'pending')
-        .neq('user_id', user?.id);
+        .neq('user_id', user?.id)
+        .order('created_at', { ascending: false });
 
       if (language !== 'all') {
         query = query.eq('language', language);
