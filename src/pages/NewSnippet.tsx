@@ -14,19 +14,20 @@ import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
 
 const SUPPORTED_LANGUAGES = [
-  'javascript',
-  'typescript',
-  'python',
-  'java',
-  'cpp',
-  'csharp',
-  'go',
-  'rust',
-  'php',
-  'ruby',
-  'swift',
-  'kotlin'
-].sort();
+  'C',
+  'C#',
+  'C++',
+  'Go',
+  'Java',
+  'Javascript',
+  'Kotlin',
+  'PHP',
+  'Python',
+  'Ruby',
+  'Rust',
+  'Swift',
+  'Typescript'
+];
 
 interface SupabaseError {
   message: string;
