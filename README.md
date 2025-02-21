@@ -1,4 +1,4 @@
-# CodeReview
+# CodeRev
 **A Collaborative Platform for Team Code Reviews**
 
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
@@ -32,7 +32,7 @@
 ## Installation
 ```bash
 # Clone repository
-git clone https://github.com/Gich-M/CodeReview
+git clone https://github.com/Gich-M/CodeRev
 
 # Install dependencies
 npm install

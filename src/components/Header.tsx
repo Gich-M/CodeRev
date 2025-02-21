@@ -250,7 +250,7 @@ export function Header() {
               className="flex items-center space-x-3"
             >
               <Code2 className="w-8 h-8 text-blue-500" />
-              <span className="text-xl font-bold text-white">CodeReview</span>
+              <span className="text-xl font-bold text-white">CodeRev</span>
             </Link>
 
             {/* Grid Menu Button */}

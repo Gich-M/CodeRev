@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 import { FeatureCard } from '../components/FeatureCard';
 import { FEATURES } from '../constants/about';
@@ -19,7 +18,7 @@ export function About() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            About CodeReview
+            About CodeRev
           </motion.h1>
           <motion.p 
             className="text-xl text-indigo-100"
